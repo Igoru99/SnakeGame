@@ -1,0 +1,146 @@
+#!/usr/bin/env python3.4
+# By Igoru99 (C) 2016 year
+import time
+import win32api
+import pythoncom
+import pyHook
+import threading
+import os
+import random
+from colorama import Fore, Back, Style, init
+
+
+data = ['0' for i in range(800)]  # Game box
+scores = 0  # Scores
+python = [140,180,220]  # List of coordinats the snake
+is_game = True  # Checking of game end
+key = 1  # Pressed key
+
+
+def OnKeyboardEvent(event):
+    global key
+    LEFT = win32api.GetKeyState(0x25)
+    RIGHT = win32api.GetKeyState(0x27)
+    UP = win32api.GetKeyState(0x26)
+    DOWN = win32api.GetKeyState(0x28)
+    if LEFT<0:
+        key = 4
+    elif RIGHT<0:
+        key = 3
+    elif UP<0:
+        key = 2
+    elif DOWN<0:
+        key = 1
+
+def EventListener():  # Function for listening pressed keys
+    hm = pyHook.HookManager()
+    hm.KeyAll = OnKeyboardEvent
+    hm.HookKeyboard()
+    pythoncom.PumpMessages()
+
+def ini():  # Function of initialization the game
+    global data
+    init()
+    for i in range(20):
+        index = random.randint(0,799)
+        if index != 260 and index != 300:
+            data[index] = Back.WHITE +  '|' + Back.BLACK
+    for i in range(0,40):
+        data[i] = Back.WHITE +  '-' + Back.BLACK
+    for i in range(0, 800, 40):
+        data[i] = Back.WHITE +  '|' + Back.BLACK
+    for i in range(39, 800, 40):
+        data[i] = Back.WHITE +  '|' + Back.BLACK
+    for i in range(761,799):
+        data[i] = Back.WHITE +  '-' + Back.BLACK
+    generate_eat()
+
+def move(forward):  # Function of move the snake
+    last_pos = int()
+    data[python[0]] = '0'
+    last_pos = python.pop(0)
+    if forward == 1:  # down
+        python.append(python[len(python)-1]+40)
+    elif forward == 2:  # up
+        python.append(python[len(python)-1]-40)
+    elif forward == 3:  # right
+        python.append(python[len(python)-1]+1)
+    elif forward == 4:  # left
+        python.append(python[len(python)-1]-1)
+    if data[python[len(python)-1]] == Back.WHITE +  '-' + Back.BLACK or data[python[len(python)-1]] == Back.WHITE +  '|' + Back.BLACK or data[python[len(python)-1]] == Back.GREEN +  '*' + Back.BLACK :
+        game_end()
+        last_index = len(python)-1
+        python.remove(python[last_index])
+        python.reverse()
+        python.append(last_pos)
+        python.reverse()
+        show()
+        return False
+    elif data[python[len(python)-1]] == Back.YELLOW + '$' + Back.BLACK:
+        global scores
+        scores += 1
+        add_body(last_pos)
+        generate_eat()
+        return True
+    else:
+        return True
+
+def add_body(last_pos):  # Increase the lenght of the snake
+    python.reverse()
+    python.append(last_pos)
+    python.reverse()
+
+def generate_eat():  # Function of generation food
+    is_generate = False
+    while is_generate is False:
+        i = random.randint(0,799)
+        if data[i] != Back.GREEN + '*' + Back.BLACK and data[i] != Back.WHITE + '-' + Back.BLACK and data[i] != Back.WHITE + '|' + Back.BLACK:
+            data[i] = Back.YELLOW + '$' + Back.BLACK
+            is_generate = True
+
+def game_end():
+    global is_game
+    is_game = False
+    for i in range(291, 308):
+        data[i] = Back.RED +  '-' + Back.BLACK
+    data[291] = Back.RED + '+' + Back.BLACK
+    data[307] = Back.RED + '+' + Back.BLACK
+    for i in range(371, 388):
+        data[i] = Back.RED + '-' + Back.BLACK
+    data[371] = Back.RED + '+' + Back.BLACK
+    data[387] = Back.RED + '+' + Back.BLACK
+    t = 0
+    l = '|   Game end!   |'
+    for i in range(331,348):
+        data[i] = Back.RED + l[t] + Back.BLACK
+        t += 1
+    return
+
+def show():  # Print game box in console
+    for i in python:
+        data[i] = Back.GREEN + '*' + Back.BLACK
+    string = Back.WHITE + '|' + 38*'-' + '|\n' + '|' + 14*' ' + Back.BLUE + 'Scores: ' + str(scores) + Back.WHITE + (22-len(str(scores))-6)*' ' + '|\n' + Back.BLACK
+    for i in range(20):
+        for j in range(40*i, 40*i+40):
+               string += data[j]
+        else:
+            string += '\n'
+    print(string)
+    
+
+ini()
+show()
+time.sleep(1)
+
+t = threading.Thread(target=EventListener) # Creating new threading for EventListener
+t.daemon = True
+t.start()
+
+while True:  # Body of the game
+    os.system('cls')
+    if move(key) is False:
+        break
+    show()
+    time.sleep(0.95)
+    
+input('Press Enter to exit.')
