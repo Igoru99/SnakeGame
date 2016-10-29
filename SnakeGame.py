@@ -10,9 +10,9 @@ import random
 from colorama import Fore, Back, Style, init
 
 
-data = ['0' for i in range(800)]  # Game box
+data = ['0' for i in range(200)]  # Game box 10*20
 scores = 0  # Scores
-python = [140,180,220]  # List of coordinats the snake
+python = [110,130,150]  # List of coordinats the snake
 is_game = True  # Checking of game end
 key = 1  # Pressed key
 
@@ -32,48 +32,55 @@ def OnKeyboardEvent(event):
     elif DOWN<0:
         key = 1
 
-def EventListener():  # Function for listening pressed keys
+def EventListener():
+    """
+    Function for listening pressed keys
+    """
     hm = pyHook.HookManager()
     hm.KeyAll = OnKeyboardEvent
     hm.HookKeyboard()
     pythoncom.PumpMessages()
 
-def ini():  # Function of initialization the game
+def ini():
+    """
+    Function of initialization the game
+    """
     global data
     init()
-    for i in range(20):
-        index = random.randint(0,799)
-        if index != 260 and index != 300:
-            data[index] = Back.WHITE +  '|' + Back.BLACK
-    for i in range(0,40):
+    for i in range(0,20):
         data[i] = Back.WHITE +  '-' + Back.BLACK
-    for i in range(0, 800, 40):
+    for i in range(0, 200, 20):
         data[i] = Back.WHITE +  '|' + Back.BLACK
-    for i in range(39, 800, 40):
+    for i in range(19, 200, 20):
         data[i] = Back.WHITE +  '|' + Back.BLACK
-    for i in range(761,799):
+    for i in range(181,199):
         data[i] = Back.WHITE +  '-' + Back.BLACK
     generate_eat()
 
-def move(forward):  # Function of move the snake
+def move(forward):
+    """
+    Function of move the snake
+    """
+    global python
     last_pos = int()
     data[python[0]] = '0'
     last_pos = python.pop(0)
     if forward == 1:  # down
-        python.append(python[len(python)-1]+40)
+        python.append(python[len(python)-1]+20)
     elif forward == 2:  # up
-        python.append(python[len(python)-1]-40)
+        python.append(python[len(python)-1]-20)
     elif forward == 3:  # right
         python.append(python[len(python)-1]+1)
     elif forward == 4:  # left
         python.append(python[len(python)-1]-1)
-    if data[python[len(python)-1]] == Back.WHITE +  '-' + Back.BLACK or data[python[len(python)-1]] == Back.WHITE +  '|' + Back.BLACK or data[python[len(python)-1]] == Back.GREEN +  '*' + Back.BLACK :
-        game_end()
+    if data[python[len(python)-1]] == Back.WHITE +  '-' + Back.BLACK or data[python[len(python)-1]] == Back.WHITE +  '|' + Back.BLACK or data[python[len(python)-1]] == Back.GREEN +  '*' + Back.BLACK:
         last_index = len(python)-1
         python.remove(python[last_index])
-        python.reverse()
-        python.append(last_pos)
-        python.reverse()
+        new_python = []
+        new_python.append(last_pos)
+        new_python.extend(python)
+        python = new_python.copy()
+        game_end()
         show()
         return False
     elif data[python[len(python)-1]] == Back.YELLOW + '$' + Back.BLACK:
@@ -85,43 +92,55 @@ def move(forward):  # Function of move the snake
     else:
         return True
 
-def add_body(last_pos):  # Increase the lenght of the snake
-    python.reverse()
-    python.append(last_pos)
-    python.reverse()
+def add_body(last_pos):
+    """
+    Increase the lenght of the snake
+    """
+    global python
+    new_python = []
+    new_python.append(last_pos)
+    new_python.extend(python)
+    python = new_python.copy()
 
-def generate_eat():  # Function of generation food
+def generate_eat():
+    """
+    Function of generation food
+    """
     is_generate = False
     while is_generate is False:
-        i = random.randint(0,799)
-        if data[i] != Back.GREEN + '*' + Back.BLACK and data[i] != Back.WHITE + '-' + Back.BLACK and data[i] != Back.WHITE + '|' + Back.BLACK:
+        i = random.randint(0,199)
+        if data[i] == '0':
             data[i] = Back.YELLOW + '$' + Back.BLACK
             is_generate = True
 
 def game_end():
     global is_game
     is_game = False
-    for i in range(291, 308):
+    for i in range(63, 76):
         data[i] = Back.RED +  '-' + Back.BLACK
-    data[291] = Back.RED + '+' + Back.BLACK
-    data[307] = Back.RED + '+' + Back.BLACK
-    for i in range(371, 388):
+    data[63] = Back.RED + '+' + Back.BLACK
+    data[75] = Back.RED + '+' + Back.BLACK
+    for i in range(103, 116):
         data[i] = Back.RED + '-' + Back.BLACK
-    data[371] = Back.RED + '+' + Back.BLACK
-    data[387] = Back.RED + '+' + Back.BLACK
+    data[103] = Back.RED + '+' + Back.BLACK
+    data[115] = Back.RED + '+' + Back.BLACK
     t = 0
-    l = '|   Game end!   |'
-    for i in range(331,348):
+    l = '| Game end! |'
+    for i in range(83,96):
         data[i] = Back.RED + l[t] + Back.BLACK
         t += 1
     return
 
-def show():  # Print game box in console
+def show():
+    """
+    Print game box in console
+    """
     for i in python:
-        data[i] = Back.GREEN + '*' + Back.BLACK
-    string = Back.WHITE + '|' + 38*'-' + '|\n' + '|' + 14*' ' + Back.BLUE + 'Scores: ' + str(scores) + Back.WHITE + (22-len(str(scores))-6)*' ' + '|\n' + Back.BLACK
-    for i in range(20):
-        for j in range(40*i, 40*i+40):
+        if data[i] == '0' or data[i] == Back.YELLOW + '$' + Back.BLACK or data[i] == Back.GREEN + '*' + Back.BLACK:
+            data[i] = Back.GREEN + '*' + Back.BLACK
+    string = Back.WHITE + '|' + 18*'-' + '|\n' + '|' + 4*' ' + Back.BLUE + 'Scores: ' + str(scores) + Back.WHITE + (6-len(str(scores)))*' ' + '|\n' + Back.BLACK
+    for i in range(10):
+        for j in range(20*i, 20*i+20):
                string += data[j]
         else:
             string += '\n'
@@ -141,6 +160,6 @@ while True:  # Body of the game
     if move(key) is False:
         break
     show()
-    time.sleep(0.95)
+    time.sleep(1)
     
 input('Press Enter to exit.')
